@@ -1,0 +1,160 @@
+#!groovy?
+import groovy.json.JsonOutput
+
+pipeline {
+  agent any
+  environment{
+    GIT_REPO='<%your repo path%>.git'
+    TIMESTAMP=(new Date()).toTimestamp().getTime()
+  }
+  stages {
+    stage ('PREBUILD') {
+      steps {
+        notifySlack("STARTING ${env.JOB_NAME} ${env.BUILD_NUMBER}","#deployment")
+        deleteDir()
+      }
+    }
+    stage ('CHECKOUT') {
+      steps {
+        git branch: '**', credentialsId: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', url: "https://${env.GIT_REPO}"
+      }
+    }
+    stage ('SET ENVIRONMENT VARIABLES') {
+      steps {
+        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD']]) {
+          sh '''
+            set +e
+            set +x
+            echo env.GIT_USERNAME=${GIT_USERNAME} > env.properties
+            echo env.GIT_PASSWORD=${GIT_PASSWORD} >> env.properties
+            echo env.GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD) >> env.properties
+            echo env.ORIGINAL_BRANCH=$(git rev-parse --abbrev-ref HEAD) >> env.properties
+            echo env.GIT_COMMIT=$(git rev-parse HEAD) >> env.properties
+            cat env.properties
+          '''
+        }
+
+        sh '''
+          sed 's/$/"/g' -i env.properties
+          sed 's/=/="/g' -i env.properties
+        '''
+
+        sh 'cat infra/jenkins-env-variables.groovy >> env.properties'
+
+        load ('env.properties')
+      }
+    }
+    // stage ('VALIDATE BRANCH') {
+    //   when {
+    //     expression {
+    //       return !['staging', 'feature', 'test', 'bug', 'master'].contains(env.GIT_BRANCH)
+    //     }
+    //   }
+    //   steps {
+    //     echo env.GIT_BRANCH 
+    //     echo 'branch is not supported'
+    //     sh 'exit 1'
+    //   }
+    // }
+    //
+    // stage ('MERGE TO STAGING') {
+    //   when {
+    //     expression {return env.GIT_BRANCH =~ /^(feature|test|bug)/}
+    //   }
+    //   steps {
+    //     sh '''
+    //       git config user.name 'youruser.name'
+    //       git config user.email 'useremail@yourdomain.com'
+    //       git checkout staging
+    //       git merge ${GIT_BRANCH}
+    //       echo env.GIT_COMMIT=$(git rev-parse HEAD) > merge.properties
+    //       echo env.GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD) >> merge.properties
+    //       sed 's/$/"/g' -i merge.properties
+    //       sed 's/=/="/g' -i merge.properties
+    //     '''
+    //     load ('merge.properties')
+    //   }
+    // }
+    // stage ('BUILDING IMAGE') {
+    //   steps {
+    //     ansiblePlaybook(
+    //       extras: '-c local -v',
+    //       playbook: 'infra/build-playbook.yml',
+    //       extraVars: [
+    //         commit: env.GIT_COMMIT,
+    //         image: env.DOCKER_REPO,
+    //         branch: env.GIT_BRANCH
+    //       ])
+    //   }
+    // }
+    // stage ('RUN UNIT TESTS ON STAGING IMAGE') {
+    //   when {
+    //     expression {return env.GIT_BRANCH =~ /^(staging|feature|test|bug)/}
+    //   }
+    //   steps {
+    //     echo 'here we will run tests'
+    //   }
+    // }
+    // stage ('PUSH IMAGE TO REGISTRY') {
+    //   steps {
+    //     ansiblePlaybook(
+    //       extras: '-c local -v',
+    //       playbook: 'infra/push-to-docker-hub-playbook.yml',
+    //       extraVars: [
+    //         commit: env.GIT_COMMIT,
+    //         image: env.DOCKER_REPO,
+    //         branch: env.GIT_BRANCH
+    //     ])
+    //   }
+    // }
+
+    // stage ('PUSH TO REMOTE STAGING BRANCH') {
+    //   when {
+    //     expression {return env.ORIGINAL_BRANCH=~ /^(feature|test|bug)/}
+    //   }
+    //   steps {
+    //     withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'xxxxxxxxxx-3e58-4eb0-xxxxxxxxx-xxxxxxxxxxxx', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD']]) {
+    //       sh '''
+    //         git push https://${GIT_USERNAME}:${GIT_PASSWORD}@${GIT_REPO}
+    //       '''
+    //     }
+    //   }
+    // }
+    // stage ('DEPLOY') {
+    //   steps {
+    //     ansiblePlaybook(
+    //       playbook: 'infra/deploy-swarm-playbook.yml',
+    //       extras: '-c local -v',
+    //       extraVars: [
+    //         commit: env.GIT_COMMIT,
+      //       image:  env.DOCKER_REPO,
+      //       service: env.COMPONENT,
+      //       environment: env.GIT_BRANCH,
+      //       branch: env.GIT_BRANCH])
+      // }
+    // }
+  }
+
+  post {
+    always {
+      // notifySlack("${currentBuild.result} ${env.JOB_NAME} ${env.BUILD_NUMBER}","#deployment")
+      sh 'echo "This will always run"'
+    }
+    success {
+      sh 'echo "This will run only if successful"'
+    }
+    failure {
+      // notifySlack("${currentBuild.result} ${env.JOB_NAME} ${env.BUILD_NUMBER}","#deployment")
+      sh 'echo "This will run only if failed"'
+    }
+    unstable {
+      sh 'echo "This will run only if the run was marked as unstable"'
+    }
+    changed {
+      sh 'echo "This will run only if the state of the Pipeline has changed"'
+      sh 'echo "For example, the Pipeline was previously failing but is now successful"'
+      sh 'echo "... or the other way around :)"'
+    }
+  }
+}
+

@@ -1,0 +1,10 @@
+---
+- hosts: localhost
+  become: yes
+  vars:
+    jenkins_admin_username: admin
+    jenkins_admin_password: {{ jenkins_admin_password }}
+    jenkins_plugins: ['swarm', 'git', 'workflow-aggregator', 'ssh-slaves', 'credentials', 'Ansible Plugin']
+  roles:
+    - role: geerlingguy.jenkins
+

@@ -1,0 +1,54 @@
+{
+  "variables": {
+    "aws_access_key": "{{env `TF_VAR_access_key`}}",
+    "aws_secret_key": "{{env `TF_VAR_secret_key`}}"
+  },
+  "builders": [{
+    "type": "amazon-ebs",
+    "access_key": "{{user `aws_access_key`}}",
+    "secret_key": "{{user `aws_secret_key`}}",
+    "region": "eu-central-1",
+    "source_ami": "ami-XXXXXXXX",
+    "instance_type": "t2.micro",
+    "ssh_username": "ubuntu",
+    "ami_name": "packer-jenkins-master-test {{timestamp}}"
+  }],
+  "provisioners": [{
+    "type": "shell",
+    "inline": [
+      "sleep 240",
+      "sudo apt-add-repository -y ppa:ansible/ansible",
+      "sudo apt-get update",
+      "sudo apt-get -y dist-upgrade",
+      "sudo apt-get install -y unattended-upgrades",
+      "sudo unattended-upgrades",
+      "sudo reboot",
+      "sleep 30"
+    ]},
+    {
+      "type":"shell",
+      "inline": [
+        "sudo apt-get install -y default-jre default-jdk python-pip aufs-tools software-properties-common ansible python-pycurl linux-image-extra-$(uname -r) apt-transport-https ca-certificates unzip libwww-perl libdatetime-perl ntp htop iotop",
+        "sudo reboot",
+        "sleep 60"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "sleep 30",
+        "sudo pip install boto docker-py python-jenkins lxml",
+        "sudo pip install --upgrade jinja2",
+        "sudo ansible-galaxy install angstwad.docker_ubuntu",
+        "sudo ansible-galaxy install geerlingguy.jenkins",
+        "sudo chown -R ubuntu:ubuntu /home/ubuntu/.ansible"
+      ]
+    },
+    {
+      "type": "ansible-local",
+      "role_paths": [
+        "/Users/daniel.zinger/jenkins-utils/packer/roles/common-basic"
+      ],
+      "playbook_file": "jenkins-master-provision.yml"
+    }]
+}

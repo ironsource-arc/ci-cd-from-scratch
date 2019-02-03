@@ -1,0 +1,6 @@
+---
+  - name: create jenkins user
+    user:
+      name=jenkins 
+      shell=/bin/bash
+      home=/home/jenkins 

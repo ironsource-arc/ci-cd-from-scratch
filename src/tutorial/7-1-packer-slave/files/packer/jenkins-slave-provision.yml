@@ -1,0 +1,20 @@
+---
+- hosts: 127.0.0.1
+  become: yes
+  vars:
+
+  tasks:
+    - name: Install awscli
+      pip: name='awscli'
+  roles:
+    - role: common-basic
+    - role: jenkins-slave-basic
+    - { role: jenkins-basic,
+        jenkins_home: '/home/jenkins/'
+      }
+    - role: angstwad.docker_ubuntu
+      pip_install_docker_compose: true
+      pip_install_docker_py: true
+      pip_version_docker_compose: latest
+      docker_opts: "--log-driver=json-file --log-opt max-size=10m --log-opt max-file=1"
+      docker_group_members: ['ubuntu', 'jenkins']

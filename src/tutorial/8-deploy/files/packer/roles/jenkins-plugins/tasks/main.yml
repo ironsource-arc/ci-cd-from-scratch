@@ -1,0 +1,13 @@
+---
+  - name: Get admin password
+    shell: cat '/var/lib/jenkins/secrets/initialAdminPassword'
+    register: initialAdminPassword
+  - name: Print friendly message
+    debug:
+      msg: "hello"
+  - name: Setting jenkins password to be used by plugins and jobs roles
+    set_fact:
+      jenkins_admin_password: "{{ initialAdminPassword.stdout }}"
+  - name: Print friendly message
+    debug:
+      msg: "{{jenkins_admin_password}}"

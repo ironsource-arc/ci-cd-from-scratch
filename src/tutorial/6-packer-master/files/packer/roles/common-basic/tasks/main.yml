@@ -1,0 +1,19 @@
+---
+  - name: ensures /home/ubuntu/.ssh dir exists
+    file: path=/home/ubuntu/.ssh state=directory
+  - name: copy public keys
+    copy:
+        src=authorized_keys
+        dest=/home/ubuntu/.ssh/authorized_keys
+        owner=ubuntu
+        group=ubuntu
+        mode=0644
+    retries: 5
+    delay: 2
+    ignore_errors: yes
+  - name: Install dependencies
+    apt:
+        name={{ item }}
+        update_cache=yes
+    with_items:
+        - ntp

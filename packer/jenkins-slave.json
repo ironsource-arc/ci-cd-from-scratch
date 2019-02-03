@@ -1,0 +1,55 @@
+{
+  "variables": {
+    "aws_access_key": "{{env `TF_VAR_access_key`}}",
+    "aws_secret_key": "{{env `TF_VAR_secret_key`}}",
+    "home": "{{env `YOUR_HOME_FOLDER`}}"
+  },
+  "builders": [{
+    "type": "amazon-ebs",
+    "access_key": "{{user `aws_access_key`}}",
+    "secret_key": "{{user `aws_secret_key`}}",
+    "region": "eu-central-1",
+    "source_ami": "ami-XXXXXXXX",
+    "instance_type": "t2.micro",
+    "ssh_username": "ubuntu",
+    "ami_name": "packer-jenkins-slave-test {{timestamp}}"
+  }],
+  "provisioners": [{
+    "type": "shell",
+    "inline": [
+      "sleep 240",
+      "sudo apt-add-repository -y ppa:ansible/ansible",
+      "sudo apt-get update",
+      "sudo apt-get -y dist-upgrade",
+      "sudo apt-get install -y unattended-upgrades",
+      "sudo unattended-upgrades",
+      "sudo reboot",
+      "sleep 60"
+    ]},
+    {
+      "type":"shell",
+      "inline": [
+        "sudo apt-get install -y python-pip aufs-tools software-properties-common ansible python-pycurl linux-image-extra-$(uname -r) apt-transport-https ca-certificates unzip libwww-perl default-jre libdatetime-perl ntp htop iotop ruby",
+        "sudo reboot",
+        "sleep 60"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "sudo pip install boto docker-py",
+        "sudo pip install --upgrade jinja2",
+        "sudo ansible-galaxy install angstwad.docker_ubuntu",
+        "sudo chown -R ubuntu:ubuntu /home/ubuntu/.ansible"
+      ]
+    },
+    {
+      "type": "ansible-local",
+      "role_paths": [
+        "{{ user `home` }}/ci-cd-from-scratch/packer/roles/common-basic",
+        "{{ user `home` }}/ci-cd-from-scratch/packer/roles/jenkins-slave-basic",
+        "{{ user `home` }}/ci-cd-from-scratch/packer/roles/jenkins-basic"
+      ],
+      "playbook_file": "jenkins-slave-provision.yml"
+    }]
+}

@@ -1,0 +1,41 @@
+---
+  - name: ensures jenkins ssh folder exists under jenkins home dir
+    file: 
+      path='{{ jenkins_home }}.ssh' 
+      state=directory 
+      owner=jenkins
+      group=jenkins
+      mode=0700
+
+  - name: copy authorized keys
+    copy:
+        src=authorized_keys
+        dest='{{ jenkins_home }}.ssh/authorized_keys'
+        owner=jenkins
+        group=jenkins
+        mode=0644
+    retries: 5
+    delay: 2
+    ignore_errors: yes
+
+  - name: copy private rsa key
+    copy:
+        src=jenkins_rsa
+        dest='{{ jenkins_home }}.ssh/id_rsa'
+        owner=jenkins
+        group=jenkins
+        mode=0700
+    retries: 5
+    delay: 2
+    ignore_errors: yes
+
+  - name: copy public rsa key
+    copy:
+        src=jenkins_rsa.pub
+        dest='{{ jenkins_home }}.ssh/id_rsa.pub'
+        owner=jenkins
+        group=jenkins
+        mode=0744
+    retries: 5
+    delay: 2
+    ignore_errors: yes

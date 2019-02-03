@@ -1,0 +1,48 @@
+---
+- hosts: 127.0.0.1
+  become: yes
+  vars:
+  tasks:
+    - name: Install awscli
+      pip: name='awscli'
+  roles:
+    - role: geerlingguy.jenkins
+    - role: angstwad.docker_ubuntu
+      pip_install_docker_compose: true
+      pip_install_docker_py: true
+      pip_version_docker_compose: latest
+      docker_opts: "--log-driver=json-file --log-opt max-size=10m --log-opt max-file=1"
+      docker_group_members: ['ubuntu']
+    - role: common-basic
+    - { role: jenkins-basic,
+        jenkins_home: '/var/lib/jenkins/'
+      }
+    - role: jenkins-plugins
+
+  post_tasks:
+    - block:
+        - name: Restart Jenkins to make the plugin data available
+          service: name=jenkins state=restarted
+
+        - name: Wait untils Jenkins web API is available
+          shell: curl --head --silent http://localhost:8080/cli/
+          register: result
+          until: result.stdout.find("403") != -1
+          retries: 12
+          delay: 5
+
+        - name: Install jenkins plugins
+          include_role:
+            name: geerlingguy.jenkins
+          vars:
+            jenkins_plugins: ['swarm', 'git', 'workflow-aggregator', 'ssh-slaves', 'credentials']
+          retries: 3
+
+      rescue:
+        - debug: msg='I caught an error'
+    - block:
+        - name: Install jenkins jobs
+          include_role:
+            name: jenkins-jobs
+      rescue:
+        - debug: msg='I caught an error'
