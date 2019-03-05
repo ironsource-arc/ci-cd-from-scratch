@@ -1,6 +1,6 @@
 # CI/CD from scratch
 
-At ironSource infra team, we are responsible for developing an automation framework to help test our various products.
+> At ironSource infrastructure team, we are responsible for developing an automation framework to help test our various products.
 Deploying hundreds of microservices across different platforms, cloud providers and on-prem solutions can become a cumbersome
 task. To alleviate the effort of supporting a growing, auto scalable architecture, we had to develop a flexible ci / cd process. One that is easily reused and one that its building blocks are easily replaced. 
 This tutorial will walk you through all the steps we use to create our CI/CD infrastructure. 

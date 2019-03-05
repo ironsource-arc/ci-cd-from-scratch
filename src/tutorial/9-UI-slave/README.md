@@ -1,4 +1,4 @@
-At ironSource infra team, we are responsible for developing an automation framework to help test our various products.
+> At ironSource infrastructure team, we are responsible for developing an automation framework to help test our various products.
 
 ## Configuring slave via jenkins UI and adding credentials to jenkins
 

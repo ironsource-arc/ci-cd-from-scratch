@@ -1,4 +1,4 @@
-> At ironSource infra team, we are responsible for developing an automation framework to help test our various products.
+> At ironSource infrastructure team, we are responsible for developing an automation framework to help test our various products.
 
 ## Setting up the Amazon network - Part 1
 
