@@ -1,6 +1,4 @@
-# Infrastructure Team CI/CD
-
-## CI/CD process using: docker, jenkins, ansible, and some other tools.
+# CI/CD from scratch
 
 At ironSource infra team, we are responsible for developing an automation framework to help test our various products.
 Deploying hundreds of microservices across different platforms, cloud providers and on-prem solutions can become a cumbersome
