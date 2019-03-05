@@ -2,7 +2,7 @@
 
 ## Summary
 
-> At ironSource infrastructure team, we are responsible for developing an automation framework for our products.
+At ironSource infrastructure team, we are responsible for developing an automation framework for our products.
 
 Deploying hundreads of microservices across different platforms, cloud providers and on-prem solutions can become a cumbersome
 task. To alleviate the effort of supporting a growing, auto scalable architecture, we had to develop a flexible CI/CD process. One that is easily reused and one that its building blocks are easily replaced. 
